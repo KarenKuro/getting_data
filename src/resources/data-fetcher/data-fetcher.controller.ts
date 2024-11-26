@@ -2,9 +2,10 @@ import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { DataFetchService } from './data-fetcher.service';
 import {
   AuthTokenDTO,
-  ClientsDTO,
+  ClientsWithoutStatusDTO,
   CreateUserDTO,
   PaginationQueryDTO,
+  SuccessDTO,
 } from './dto';
 import {
   ApiBearerAuth,
@@ -59,7 +60,7 @@ export class DataFetchController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all categories' })
+  @ApiOperation({ summary: 'Get clients data without field "status"' })
   @ApiQuery({
     name: 'offset',
     required: false,
@@ -74,8 +75,8 @@ export class DataFetchController {
   })
   @ApiResponse({
     status: 200,
-    type: Array<ClientsDTO>,
-    description: 'Get clients list',
+    type: Array<ClientsWithoutStatusDTO>,
+    description: 'Get clients without field "status"',
   })
   @Get('clients')
   @UseGuards(AuthUserGuard())
@@ -86,5 +87,43 @@ export class DataFetchController {
     const data = await this._dataFetchService.fetchData(token, pagination);
 
     return data;
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get clients table' })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of records to skip',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of records to return',
+  })
+  @ApiResponse({
+    status: 201,
+    type: SuccessDTO,
+    description: 'Get all clients data and create a table',
+  })
+  @Post('table')
+  @UseGuards(AuthUserGuard())
+  async getClientsTable(
+    @AuthToken() token: AuthTokenDTO,
+    @Query() pagination: PaginationQueryDTO,
+  ): Promise<SuccessDTO> {
+    const clientsWithoutStatus = await this._dataFetchService.fetchData(
+      token,
+      pagination,
+    );
+
+    const table = await this._dataFetchService.createTable(
+      clientsWithoutStatus,
+      token,
+    );
+
+    return { success: true };
   }
 }
