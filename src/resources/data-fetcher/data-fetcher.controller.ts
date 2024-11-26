@@ -1,7 +1,19 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { DataFetchService } from './data-fetcher.service';
-import { AuthTokenDTO, CreateUserDTO, SuccessDTO } from './dto';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  AuthTokenDTO,
+  ClientsDTO,
+  CreateUserDTO,
+  PaginationQueryDTO,
+} from './dto';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger';
+import { AuthToken } from '@common/decorators';
+import { AuthUserGuard } from '@common/guards';
 
 @Controller('api')
 export class DataFetchController {
@@ -46,4 +58,33 @@ export class DataFetchController {
     return token;
   }
 
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all categories' })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of records to skip',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of records to return',
+  })
+  @ApiResponse({
+    status: 200,
+    type: Array<ClientsDTO>,
+    description: 'Get clients list',
+  })
+  @Get('clients')
+  @UseGuards(AuthUserGuard())
+  async fetchData(
+    @AuthToken() token: AuthTokenDTO,
+    @Query() pagination: PaginationQueryDTO,
+  ) {
+    const data = await this._dataFetchService.fetchData(token, pagination);
+
+    return data;
+  }
 }

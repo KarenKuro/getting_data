@@ -5,4 +5,7 @@ export const USER_ERROR_MESSAGES = {
   USER_NOT_FOUND: {
     message: 'err_user_not_found',
   },
+  USER_NOT_AUTHORIZED: {
+    message: 'err_user_not_authorized',
+  },
 };
